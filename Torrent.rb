@@ -1,7 +1,7 @@
 require 'nil/string'
 
 class Torrent
-	attr_writer :units
+	attr_accessor :units
 	
 	def initialize(input)
 		@input = input
