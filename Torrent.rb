@@ -1,6 +1,8 @@
 require 'nil/string'
 
 class Torrent
+	attr_writer :units
+	
 	def initialize(input)
 		@input = input
 		@offset = 0
@@ -11,7 +13,6 @@ class Torrent
 	def processData
 		while @offset < @input.size
 			unit = readUnit
-			puts unit.inspect[0..50]
 			@units << unit
 		end
 	end
@@ -23,7 +24,6 @@ class Torrent
 	
 	def readUnit
 		letter = nextByte
-		puts "Letter: #{letter}, offset: #{@offset}"
 		case letter
 		when 'i'
 			return readInteger
@@ -33,7 +33,6 @@ class Torrent
 			return readDictionary
 		when 'e'
 			#terminator of dictionaries/lists
-			puts "Got a terminator at offset #{@offset}"
 			@offset += 1
 			return nil
 		when nil
@@ -88,12 +87,48 @@ class Torrent
 		raise "Invalid string length: #{numberString}" if !numberString.isNumber
 		number = numberString.to_i
 		@offset = offset + 1
-		puts "#{@offset} -> #{number}"
 		newOffset = @offset + number
 		raise "Invalid string length: #{number}" if newOffset >= @input.size
 		string = @input[@offset..(newOffset - 1)]
 		@offset = newOffset
-		puts "New offset: #{@offset}"
 		return string
+	end
+	
+	def getOutput
+		@output = ''
+		@units.each do |unit|
+			serialise(unit)
+		end
+		return @output
+	end
+	
+	def serialise(unit)
+		case unit
+		when String
+			@output.concat "#{unit.size}:#{unit}"
+		when Fixnum
+			writeNumber(unit)
+		when Bignum
+			writeNumber(unit)
+		when Array
+			@output.concat 'l'
+			unit.each do |element|
+				serialise element
+			end
+			@output.concat 'e'
+		when Hash
+			@output.concat 'd'
+			unit.each do |key, value|
+				serialise key
+				serialise value
+			end
+			@output.concat 'e'
+		else
+			raise "Encountered an invalid type: #{unit.class}"
+		end
+	end
+	
+	def writeNumber(unit)
+		@output.concat "i#{unit}e"
 	end
 end

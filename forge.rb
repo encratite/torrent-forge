@@ -8,6 +8,10 @@ if ARGV.size != 2
 	exit
 end
 
-input = Nil.readFile(ARGV[0])
-output = ARGV[1]
+inputPath = ARGV[0]
+outputPath = ARGV[1]
+
+input = Nil.readFile(inputPath)
 torrent = Torrent.new(input)
+output = torrent.getOutput
+Nil.writeFile(outputPath, output)
