@@ -9,8 +9,9 @@ class Torrent
 	end
 	
 	def processData
-		while @offset < input.size
-			unit = readunit
+		while @offset < @input.size
+			unit = readUnit
+			puts unit.inspect[0..50]
 			@units << unit
 		end
 	end
@@ -22,6 +23,7 @@ class Torrent
 	
 	def readUnit
 		letter = nextByte
+		puts "Letter: #{letter}, offset: #{@offset}"
 		case letter
 		when 'i'
 			return readInteger
@@ -31,6 +33,8 @@ class Torrent
 			return readDictionary
 		when 'e'
 			#terminator of dictionaries/lists
+			puts "Got a terminator at offset #{@offset}"
+			@offset += 1
 			return nil
 		when nil
 			raise 'Incomplete list/dictionary'
@@ -51,11 +55,13 @@ class Torrent
 		numberString = @input[@offset..(offset - 1)]
 		raise "Invalid integer length: #{numberString}" if !numberString.isNumber
 		number = numberString.to_i
+		@offset = offset + 1
 		return number
 	end
 	
 	def readList
 		output = []
+		@offset += 1
 		while true
 			unit = readUnit
 			return output if unit == nil
@@ -65,6 +71,7 @@ class Torrent
 	
 	def readDictionary
 		output = {}
+		@offset += 1
 		while true
 			key = readUnit
 			return output if key == nil
@@ -81,10 +88,12 @@ class Torrent
 		raise "Invalid string length: #{numberString}" if !numberString.isNumber
 		number = numberString.to_i
 		@offset = offset + 1
+		puts "#{@offset} -> #{number}"
 		newOffset = @offset + number
 		raise "Invalid string length: #{number}" if newOffset >= @input.size
 		string = @input[@offset..(newOffset - 1)]
 		@offset = newOffset
+		puts "New offset: #{@offset}"
 		return string
 	end
 end
