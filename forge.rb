@@ -1,16 +1,20 @@
+$: << File.dirname(__FILE__)
+
+require 'configuration'
+
 require 'nil/file'
 
 require 'Torrent'
 
-if ARGV.size != 3
+if ARGV.size != 1
 	puts 'Usage:'
-	puts "ruby #{File.basename(__FILE__)} <input> <output> <new trackers>"
+	puts "ruby #{File.basename(__FILE__)} <input>"
 	exit
 end
 
 inputPath = ARGV[0]
-outputPath = ARGV[1]
-trackerPath = ARGV[2]
+outputPath = Nil.joinPaths(Configuration::TorrentPath, File.basename(inputPath))
+trackerPath = Configuration::TrackerFile
 
 input = Nil.readFile(inputPath)
 if input == nil
@@ -35,3 +39,4 @@ root['announce-list'] = trackers.map{|x| [x]}
 
 output = torrent.getOutput
 Nil.writeFile(outputPath, output)
+puts "Wrote data to #{outputPath}"
